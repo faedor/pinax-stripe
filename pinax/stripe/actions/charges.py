@@ -160,7 +160,9 @@ def sync_charges_for_customer(customer):
     Args:
         customer: a pinax.stripe.models.Customer object
     """
-    for charge in customer.stripe_customer.charges().data:
+    charges = stripe.Charge.list(customer=customer.stripe_customer.id)
+
+    for charge in charges.data:
         sync_charge_from_stripe_data(charge)
 
 

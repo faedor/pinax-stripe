@@ -418,7 +418,7 @@ class Invoice(StripeAccountFromCustomerMixin, StripeObject):
     subscription = models.ForeignKey(Subscription, null=True, blank=True, on_delete=models.CASCADE)
     statement_descriptor = models.TextField(blank=True)
     currency = models.CharField(max_length=10, default="usd")
-    closed = models.BooleanField(default=False)
+    closed = models.NullBooleanField(default=None)
     description = models.TextField(blank=True)
     paid = models.BooleanField(default=False)
     receipt_number = models.TextField(blank=True)

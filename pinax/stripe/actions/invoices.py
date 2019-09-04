@@ -56,7 +56,7 @@ def pay(invoice, send_receipt=True):
     Returns:
         True if the invoice was paid, False if it was unable to be paid
     """
-    if not invoice.paid and not invoice.closed:
+    if not invoice.paid and invoice.closed is False:
         stripe_invoice = invoice.stripe_invoice.pay()
         sync_invoice_from_stripe_data(stripe_invoice, send_receipt=send_receipt)
         return True
@@ -77,7 +77,7 @@ def sync_invoice_from_stripe_data(stripe_invoice, send_receipt=settings.PINAX_ST
     c = models.Customer.objects.get(stripe_id=stripe_invoice["customer"])
     period_end = utils.convert_tstamp(stripe_invoice, "period_end")
     period_start = utils.convert_tstamp(stripe_invoice, "period_start")
-    date = utils.convert_tstamp(stripe_invoice, "date")
+    date = utils.convert_tstamp(stripe_invoice, "created")
     sub_id = stripe_invoice.get("subscription")
     stripe_account_id = c.stripe_account_stripe_id
 
@@ -96,7 +96,7 @@ def sync_invoice_from_stripe_data(stripe_invoice, send_receipt=settings.PINAX_ST
         attempted=stripe_invoice["attempted"],
         attempt_count=stripe_invoice["attempt_count"],
         amount_due=utils.convert_amount_for_db(stripe_invoice["amount_due"], stripe_invoice["currency"]),
-        closed=stripe_invoice["closed"],
+        closed=stripe_invoice.get("closed"),
         paid=stripe_invoice["paid"],
         period_end=period_end,
         period_start=period_start,
@@ -131,7 +131,9 @@ def sync_invoices_for_customer(customer):
     Args:
         customer: the customer for whom to synchronize all invoices
     """
-    for invoice in customer.stripe_customer.invoices().data:
+    invoices = stripe.Invoice.list(customer=customer.stripe_customer.id)
+
+    for invoice in invoices.data:
         sync_invoice_from_stripe_data(invoice, send_receipt=False)
 
 
@@ -165,7 +167,7 @@ def sync_invoice_items(invoice, items):
             else:
                 stripe_subscription = subscriptions.retrieve(
                     invoice.customer,
-                    item["id"]
+                    item["subscription"]
                 )
                 item_subscription = subscriptions.sync_subscription_from_stripe_data(
                     invoice.customer,

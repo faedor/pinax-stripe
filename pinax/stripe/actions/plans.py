@@ -20,14 +20,16 @@ def sync_plan(plan, event=None):
         plan: data from Stripe API representing a plan
         event: the event associated with the plan
     """
-
+    product = stripe.Product.retrieve(plan["product"])
+    product_name = product["name"]
+    statement_descriptor = product["statement_descriptor"]
     defaults = {
         "amount": utils.convert_amount_for_db(plan["amount"], plan["currency"]),
         "currency": plan["currency"] or "",
         "interval": plan["interval"],
         "interval_count": plan["interval_count"],
-        "name": plan["name"],
-        "statement_descriptor": plan["statement_descriptor"] or "",
+        "name": product_name,
+        "statement_descriptor": statement_descriptor or "",
         "trial_period_days": plan["trial_period_days"],
         "metadata": plan["metadata"]
     }
