@@ -16,10 +16,8 @@ def cancel(subscription, at_period_end=True):
         subscription: the subscription to cancel
         at_period_end: True to cancel at the end of the period, otherwise cancels immediately
     """
-    sub = stripe.Subscription(
-        subscription.stripe_id,
-        stripe_account=subscription.stripe_account_stripe_id,
-    ).delete(
+    sub = stripe.Subscription.modify(
+        sid=subscription.stripe_id,
         cancel_at_period_end=at_period_end,
     )
     return sync_subscription_from_stripe_data(subscription.customer, sub)
