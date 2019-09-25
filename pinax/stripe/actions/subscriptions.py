@@ -20,7 +20,7 @@ def cancel(subscription, at_period_end=True):
         subscription.stripe_id,
         stripe_account=subscription.stripe_account_stripe_id,
     ).delete(
-        at_period_end=at_period_end,
+        cancel_at_period_end=at_period_end,
     )
     return sync_subscription_from_stripe_data(subscription.customer, sub)
 
